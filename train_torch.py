@@ -38,7 +38,7 @@ len(train_set), len(val_set), len(test_set)
 vocab_size = len(vocab)
 vocab_size, max_len
 
-MODEL = "resnet50_monolstm"
+MODEL = "vgg16_monolstm"
 EMBEDDING_DIM = 50
 EMBEDDING = f"GLV{EMBEDDING_DIM}"
 HIDDEN_SIZE = 256
@@ -66,7 +66,6 @@ def embedding_matrix_creator(embedding_dim, word2idx, GLOVE_DIR='data/glove.6B/'
     for word, i in tqdm(word2idx.items()):
         embedding_vector = embeddings_index.get(word.lower())
         if embedding_vector is not None:
-            # words not found in embedding index will be all-zeros.
             embedding_matrix[i] = embedding_vector
     return embedding_matrix
 
@@ -81,7 +80,6 @@ def words_from_tensors_fn(idx2word, max_len=40, startseq='<start>', endseq='<end
         """
         captoks = []
         for capidx in captions:
-            # capidx = [1, max_len]
             captoks.append(list(itertools.takewhile(lambda word: word != endseq,
                                                     map(lambda idx: idx2word[idx], iter(capidx))))[1:])
         return captoks
@@ -101,9 +99,7 @@ def train_model(train_loader, model, loss_fn, optimizer, vocab_size, acc_fn, des
         lengths = lengths[sort_ind]
 
         optimizer.zero_grad()
-        # [sum_len, vocab_size]
         outputs = model(images, captions, lengths)
-        # [b, max_len] -> [sum_len]
         targets = pack_padded_sequence(captions, lengths=lengths, batch_first=True, enforce_sorted=True)[0]
 
         loss = loss_fn(outputs, targets)

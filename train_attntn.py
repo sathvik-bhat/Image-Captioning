@@ -6,7 +6,6 @@ import tqdm
 import torch
 import itertools
 from datasets.flickr8k import Flickr8kDataset
-# from glove import embedding_matrix_creator
 from metrics import *
 import numpy as np
 import os
@@ -69,7 +68,6 @@ def embedding_matrix_creator(embedding_dim, word2idx, GLOVE_DIR='data/glove.6B/'
     for word, i in tqdm(word2idx.items()):
         embedding_vector = embeddings_index.get(word.lower())
         if embedding_vector is not None:
-            # words not found in embedding index will be all-zeros.
             embedding_matrix[i] = embedding_vector
     return embedding_matrix
 
@@ -98,11 +96,8 @@ def train_model(train_loader, model, loss_fn, optimizer, vocab_size, acc_fn, des
 
         scores, caps_sorted, decode_lengths, alphas, sort_ind = model(images, captions, lengths)
 
-        # Since decoding starts with <start>, the targets are all words after <start>, up to <end>
         targets = caps_sorted[:, 1:]
 
-        # Remove timesteps that we didn't decode at, or are pads
-        # pack_padded_sequence is an easy trick to do this
         scores = pack_padded_sequence(scores, decode_lengths, batch_first=True)[0]
         targets = pack_padded_sequence(targets, decode_lengths, batch_first=True)[0]
 
